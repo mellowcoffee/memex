@@ -47,20 +47,22 @@ impl Wiki {
                     .ok_or(Error::Parse)?
                     .into();
                 let parent = parsed.frontmatter.and_then(|f| f.parent);
+                let outgoing = HashSet::from_iter(parsed.links);
                 let page = Page {
                     content: parsed.html,
                     parent,
-                    outgoing: HashSet::new(), // TODO: Extract links here, validate in next pass
+                    outgoing,
                     incoming: HashSet::new(),
                 };
                 Ok((id, page))
             })
             .collect::<Result<_>>()?;
 
-        // Pass 2: validate parent IDs
+        // Pass 2: validate links
         let valid_ids: HashSet<_> = pages.keys().cloned().collect();
         pages.values_mut().for_each(|page| {
             page.parent = page.parent.take().filter(|p| valid_ids.contains(p));
+            page.outgoing = page.outgoing.iter().filter(|p| valid_ids.contains(p)).cloned().collect();
         });
 
         // Pass 3: extract backlinks and parent links
