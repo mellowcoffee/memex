@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_id }}</title>
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="stylesheet" href="style.css">
+    {% if has_latex == true %}
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.0/tex-chtml.js"></script>
+    {% endif %}
+  </head>
+  <body>
+    <nav>
+      <img src="./logo.jpg" alt="Logo">
+      {% if parents_siblings.len() != 0 %}
+      <section class="link_col">
+      {% for e in parents_siblings %}
+        <a 
+          href="./{{ e }}" 
+          {% match parent %}
+          {% when Some(p) %}
+          {% if p == e %}class="active"{%endif%}>
+          {% else %}
+          {% endmatch %}
+          {{ e }}
+        </a>
+      {% endfor %}
+      </section>
+      {% endif %}
+      {% if siblings.len() != 0 %}
+      <section class="link_col">
+      {% for e in siblings %}
+        <a 
+          href="./{{ e }}" 
+          {% if *e == page_id %}class="active"{%endif%}>
+          {{ e }}
+        </a>
+      {% endfor %}
+      </section>
+      {% endif %}
+      {% if children.len() != 0 %}
+      <section class="link_col">
+      {% for e in children %}
+        <a href="./{{ e }}" >
+          {{ e }}
+        </a>
+      {% endfor %}
+      </section>
+      {%endif%}
+    </nav>
+    <main>
+    {{ content|safe }}
+    </main>
+    <footer>
+      {% if incoming.len() != 0 %}
+      <section>
+        <b>incoming:</b> 
+        {% for e in incoming %}
+        <a href="./{{e}}">{{e}}</a>
+        {%endfor%}
+      </section>
+      {%endif%}
+      {% if outgoing.len() != 0 %}
+      <section>
+        <b>outgoing:</b> 
+        {% for e in outgoing %}
+        <a href="./{{e}}">{{e}}</a>
+        {%endfor%}
+      </section>
+      {%endif%}
+      <p>Made by Maxwell</p>
+    </footer>
+  </body>
+</html>

@@ -7,3 +7,6 @@ edition = "2024"
 gray_matter = "0.3.2"
 pulldown-cmark = "0.13.0"
 serde = "1.0.228"
+askama = "0.15.1"
+tokio = { version = "1.49.0", features = ["full"] }
+axum = "0.8.8"

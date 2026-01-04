@@ -2,7 +2,7 @@
 //! HTML.
 
 use gray_matter::{Matter, engine::YAML};
-use pulldown_cmark::{Options, Parser, Event, Tag, html};
+use pulldown_cmark::{Event, Options, Parser, Tag, html};
 use serde::Deserialize;
 
 use crate::{error::Result, model::PageId};
@@ -27,10 +27,20 @@ impl From<String> for Html {
     }
 }
 
+impl std::fmt::Display for Html {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 pub fn parse_raw_page(raw: &str) -> Result<ParsedPage> {
     let (frontmatter, raw_content) = parse_frontmatter(raw)?;
     let (html, links) = parse_markdown(&raw_content);
-    Ok(ParsedPage { frontmatter, html, links })
+    Ok(ParsedPage {
+        frontmatter,
+        html,
+        links,
+    })
 }
 
 fn parse_frontmatter(content: &str) -> Result<(Option<Frontmatter>, String)> {
@@ -49,7 +59,10 @@ fn parse_markdown(content: &str) -> (Html, Vec<PageId>) {
 
     let iter = parser.map(|event| {
         if let Event::Start(Tag::Link { dest_url, .. }) = &event {
-            if !dest_url.starts_with("http") && !dest_url.starts_with("mailto:") && !dest_url.starts_with('#') {
+            if !dest_url.starts_with("http")
+                && !dest_url.starts_with("mailto:")
+                && !dest_url.starts_with('#')
+            {
                 links.push(dest_url.to_owned().to_string().into());
             }
         }

@@ -23,17 +23,23 @@ impl From<String> for PageId {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Wiki {
-    pages: HashMap<PageId, Page>,
+impl std::fmt::Display for PageId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
 #[derive(Debug, Clone)]
-struct Page {
-    content:  Html,
-    parent:   Option<PageId>,
-    outgoing: HashSet<PageId>,
-    incoming: HashSet<PageId>,
+pub struct Wiki {
+    pub pages: HashMap<PageId, Page>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Page {
+    pub content:  Html,
+    pub parent:   Option<PageId>,
+    pub outgoing: HashSet<PageId>,
+    pub incoming: HashSet<PageId>,
 }
 
 impl Wiki {
@@ -62,7 +68,12 @@ impl Wiki {
         let valid_ids: HashSet<_> = pages.keys().cloned().collect();
         pages.values_mut().for_each(|page| {
             page.parent = page.parent.take().filter(|p| valid_ids.contains(p));
-            page.outgoing = page.outgoing.iter().filter(|p| valid_ids.contains(p)).cloned().collect();
+            page.outgoing = page
+                .outgoing
+                .iter()
+                .filter(|p| valid_ids.contains(p))
+                .cloned()
+                .collect();
         });
 
         // Pass 3: extract backlinks and parent links
