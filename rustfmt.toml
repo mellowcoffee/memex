@@ -7,6 +7,5 @@ tab_spaces = 4
 enum_discrim_align_threshold = 20
 struct_field_align_threshold = 20
 comment_width = 60
-
 max_width = 100
 use_field_init_shorthand = true

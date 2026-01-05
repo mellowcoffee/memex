@@ -6,7 +6,11 @@ use axum::{
     routing::get,
 };
 
-use crate::{AppState, templates::Base};
+use crate::{
+    AppState,
+    db::{get_children_ids, get_page, get_sibling_ids, get_uncle_ids},
+    templates::Base,
+};
 use crate::templates;
 
 pub fn routes(State(state): State<AppState>) -> Router {
@@ -19,49 +23,27 @@ async fn get_page_by_id(
     State(state): State<AppState>,
     Path(page_id): Path<String>,
 ) -> impl IntoResponse {
-    let page = state.wiki.pages.get(&page_id.to_owned().into());
+    let page = get_page(&state.wiki.pool, &page_id).await;
     match page {
-        None => axum::response::Html(
+        Err(_) => axum::response::Html(
             templates::NotFound
                 .render()
                 .expect("[ERROR] Askama could not render static HTML"),
         ),
-        Some(page) => {
+        Ok(page) => {
             let incoming = page.incoming.iter().cloned().collect::<Vec<_>>();
             let outgoing = page.outgoing.iter().cloned().collect::<Vec<_>>();
-            let parents_parent = page
-                .parent
-                .clone()
-                .and_then(|p| state.wiki.pages.get(&p).and_then(|p| p.parent.clone()));
-            let parents_siblings = state
-                .wiki
-                .pages
-                .iter()
-                .filter(|(id, p)| {
-                    p.parent.is_some() && p.parent == parents_parent
-                        || Some(id) == page.parent.as_ref().as_ref()
-                })
-                .map(|(id, _p)| id)
-                .cloned()
-                .collect::<Vec<_>>();
-            let siblings = state
-                .wiki
-                .pages
-                .iter()
-                .filter(|(_id, p)| p.parent == page.parent)
-                .map(|(id, _p)| id)
-                .cloned()
-                .collect::<Vec<_>>();
-            let children = state
-                .wiki
-                .pages
-                .iter()
-                .filter(|(_id, p)| p.parent == Some(page_id.to_owned().into()))
-                .map(|(id, _p)| id)
-                .cloned()
-                .collect::<Vec<_>>();
+            let parents_siblings = get_uncle_ids(&state.wiki.pool, &page_id)
+                .await
+                .unwrap_or_default();
+            let siblings = get_sibling_ids(&state.wiki.pool, &page_id)
+                .await
+                .unwrap_or_default();
+            let children = get_children_ids(&state.wiki.pool, &page_id)
+                .await
+                .unwrap_or_default();
             let base = Base {
-                page_id: page_id.into(),
+                page_id,
                 parent: page.parent.to_owned(),
                 content: page.content.to_owned(),
                 incoming,

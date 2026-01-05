@@ -10,3 +10,5 @@ serde = "1.0.228"
 askama = "0.15.1"
 tokio = { version = "1.49.0", features = ["full"] }
 axum = "0.8.8"
+sqlx = { version = "0.8", features = [ "runtime-tokio", "sqlite" ] }
+serde_json = "1.0.148"

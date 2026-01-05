@@ -1,6 +1,7 @@
 #![allow(clippy::needless_for_each)]
 // #![allow(dead_code)]
 
+mod db;
 mod error;
 mod files;
 mod model;
@@ -29,7 +30,7 @@ struct AppState {
 #[tokio::main]
 async fn main() {
     let files = read_files_from_dir(FILES_DIR_PATH).unwrap();
-    let wiki = Wiki::from_files(files).unwrap();
+    let wiki = Wiki::init_from_files(files).await.unwrap();
 
     let state = AppState { wiki };
     let app = Router::new()
