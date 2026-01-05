@@ -6,8 +6,8 @@ through tracking backlinks using a graph structure
 
 ###### roadmap
 
-the current management of the wiki graph through a `HashMap` is ugly and
-inefficient, sqlite will be introduced in its place.
+data validation is currently split on the model and the database layer,
+unification is necessary.
 
 ###### disclaimer
 
