@@ -20,8 +20,8 @@ pub struct Wiki {
 
 #[derive(Debug, Clone)]
 pub struct Page {
-    pub content:  Html,
-    pub parent:   Option<String>,
+    pub content: Html,
+    pub parent: Option<String>,
     pub outgoing: HashSet<String>,
     pub incoming: HashSet<String>,
 }
@@ -38,7 +38,7 @@ impl Wiki {
             .collect::<Result<_>>()?;
         let valid_ids: HashSet<_> = pages.keys().cloned().collect();
         pages.values_mut().for_each(|page| {
-            page.parent = page.parent.take().filter(|p| valid_ids.contains(p));
+            page.set_parent(page.parent().filter(|p| valid_ids.contains(p)));
             page.links = page
                 .links
                 .iter()

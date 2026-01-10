@@ -4,17 +4,43 @@
 use gray_matter::{Matter, engine::YAML};
 use pulldown_cmark::{Event, Options, Parser, Tag, html};
 use serde::Deserialize;
+use paste::paste;
 
 use crate::error::Result;
 
-#[derive(Deserialize, Clone)]
-pub struct ParsedPage {
-    pub parent: Option<String>,
-    pub html:   Html,
-    pub links:  Vec<String>,
+macro_rules! implement_accessors {
+    // Pattern: field_name : type
+    ($($field:ident : $type:ty),* $(,)?) => {
+        paste! {
+            $(
+                pub fn $field(&self) -> Option<$type> {
+                    self.metadata.as_ref().and_then(|m| m.$field.clone())
+                }
+
+                pub fn [<set_ $field>](&mut self, new: Option<$type>) {
+                    let meta = self.metadata.get_or_insert_with(Frontmatter::default);
+                    meta.$field = new;
+                }
+            )*
+        }
+    };
 }
 
 #[derive(Deserialize, Clone)]
+pub struct ParsedPage {
+    pub html:   Html,
+    pub links:  Vec<String>,
+    pub metadata: Option<Frontmatter>,
+}
+
+impl ParsedPage {
+    implement_accessors!(
+        parent: String,
+    );
+}
+
+
+#[derive(Deserialize, Clone, Default)]
 pub struct Frontmatter {
     pub parent: Option<String>,
 }
@@ -38,9 +64,9 @@ pub fn parse_raw_page(raw: &str) -> Result<ParsedPage> {
     let (frontmatter, raw_content) = parse_frontmatter(raw)?;
     let (html, links) = parse_markdown(&raw_content);
     Ok(ParsedPage {
-        parent: frontmatter.and_then(|f| f.parent),
         html,
         links,
+        metadata: frontmatter,
     })
 }
 

@@ -44,8 +44,8 @@ async fn get_page_by_id(
                 .unwrap_or_default();
             let base = Base {
                 page_id,
-                parent: page.parent.to_owned(),
-                content: page.content.to_owned(),
+                parent: page.parent.clone(),
+                content: page.content.clone(),
                 incoming,
                 outgoing,
                 parents_siblings,

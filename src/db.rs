@@ -33,7 +33,7 @@ pub async fn _insert_page(pool: &SqlitePool, id: String, page: ParsedPage) -> Re
     )
     .bind(&id)
     .bind(page.html.to_string())
-    .bind(page.parent.unwrap_or_default())
+    .bind(page.parent().unwrap_or_default())
     .execute(pool)
     .await?;
 
@@ -77,7 +77,7 @@ async fn insert_page_with_tx(
     )
     .bind(&id)
     .bind(page.html.to_string())
-    .bind(page.parent.unwrap_or("".to_string()))
+    .bind(page.parent().unwrap_or_default())
     .execute(&mut **tx)
     .await?;
 
