@@ -65,6 +65,12 @@ textarea:not([rows]) {
   min-height: 10em;
 }
 
+blockquote {
+  border-left: 1px dotted var(--fg);
+  padding-left: 1rem;
+  margin: 0;
+}
+
 :target {
   scroll-margin-block: 5ex;
 }

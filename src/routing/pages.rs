@@ -1,9 +1,6 @@
 use askama::Template;
 use axum::{
-    Router,
-    extract::{Path, State},
-    response::IntoResponse,
-    routing::get,
+    extract::{Path, State}, response::{IntoResponse, Redirect}, routing::get, Router
 };
 
 use crate::{
@@ -15,6 +12,7 @@ use crate::templates;
 
 pub fn routes(State(state): State<AppState>) -> Router {
     Router::new()
+        .route("/", get(async || Redirect::permanent("/index")))
         .route("/{url}", get(get_page_by_id))
         .with_state(state)
 }

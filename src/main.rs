@@ -34,7 +34,6 @@ async fn main() {
 
     let state = AppState { wiki };
     let app = Router::new()
-        .route("/", get(async || "Hello world!"))
         .route(
             "/style.css",
             get(async || {
