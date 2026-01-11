@@ -19,5 +19,6 @@ pub struct Base {
     pub siblings:         Vec<String>,
     pub children:         Vec<String>,
 
-    pub has_latex: bool,
+    pub latex: bool,
+    pub code:  bool,
 }

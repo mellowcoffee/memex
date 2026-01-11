@@ -3,11 +3,12 @@
 
 use gray_matter::{Matter, engine::YAML};
 use pulldown_cmark::{Event, Options, Parser, Tag, html};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use paste::paste;
 
 use crate::error::Result;
 
+#[macro_export]
 macro_rules! implement_accessors {
     // Pattern: field_name : type
     ($($field:ident : $type:ty),* $(,)?) => {
@@ -26,23 +27,32 @@ macro_rules! implement_accessors {
     };
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct ParsedPage {
-    pub html:   Html,
-    pub links:  Vec<String>,
+    pub html:     Html,
+    pub links:    Vec<String>,
     pub metadata: Option<Frontmatter>,
 }
 
 impl ParsedPage {
     implement_accessors!(
         parent: String,
+        latex: bool,
+        code: bool,
     );
+    pub fn get_frontmatter_as_json(&self) -> String {
+        self.metadata
+            .as_ref()
+            .and_then(|m| serde_json::to_string(&m).ok())
+            .unwrap_or_default()
+    }
 }
 
-
-#[derive(Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Frontmatter {
     pub parent: Option<String>,
+    pub latex:  Option<bool>,
+    pub code:   Option<bool>,
 }
 
 #[derive(Deserialize, Clone, Debug, sqlx::Type)]

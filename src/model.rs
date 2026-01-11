@@ -5,12 +5,14 @@
 use std::collections::{HashMap, HashSet};
 
 use sqlx::SqlitePool;
+use paste::paste;
 
 use crate::{
     db::{init_database, insert_graph},
     error::{Error, Result},
     files::{Files, strip_extension_from_filename},
-    parser::{Html, ParsedPage, parse_raw_page},
+    implement_accessors,
+    parser::{Frontmatter, Html, ParsedPage, parse_raw_page},
 };
 
 #[derive(Debug, Clone)]
@@ -20,10 +22,19 @@ pub struct Wiki {
 
 #[derive(Debug, Clone)]
 pub struct Page {
-    pub content: Html,
-    pub parent: Option<String>,
+    pub content:  Html,
+    pub parent:   Option<String>,
     pub outgoing: HashSet<String>,
     pub incoming: HashSet<String>,
+    pub metadata: Option<Frontmatter>,
+}
+
+impl Page {
+    implement_accessors!(
+        parent: String,
+        latex: bool,
+        code: bool,
+    );
 }
 
 impl Wiki {

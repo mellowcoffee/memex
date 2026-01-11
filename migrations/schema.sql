@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS pages (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
     parent_id TEXT,
+    metadata TEXT,
     CONSTRAINT fk_parent
         FOREIGN KEY (parent_id) 
         REFERENCES pages(id) 

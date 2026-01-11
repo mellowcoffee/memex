@@ -1,6 +1,9 @@
 use askama::Template;
 use axum::{
-    extract::{Path, State}, response::{IntoResponse, Redirect}, routing::get, Router
+    Router,
+    extract::{Path, State},
+    response::{IntoResponse, Redirect},
+    routing::get,
 };
 
 use crate::{
@@ -40,6 +43,8 @@ async fn get_page_by_id(
             let children = get_children_ids(&state.wiki.pool, &page_id)
                 .await
                 .unwrap_or_default();
+            let latex = page.latex().unwrap_or(false);
+            let code = page.code().unwrap_or(false);
             let base = Base {
                 page_id,
                 parent: page.parent.clone(),
@@ -49,7 +54,8 @@ async fn get_page_by_id(
                 parents_siblings,
                 siblings,
                 children,
-                has_latex: false,
+                latex,
+                code,
             };
             axum::response::Html(base.render().expect("[ERROR] Askama failed to render."))
         }

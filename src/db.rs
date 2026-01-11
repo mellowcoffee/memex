@@ -5,11 +5,16 @@ use sqlx::{QueryBuilder, Row, Sqlite, SqlitePool, Transaction};
 use crate::{error::Result, model::Page, parser::ParsedPage};
 
 const SCHEMA: &str = include_str!(".././migrations/schema.sql");
+const DROP: &str = include_str!(".././migrations/drop_tables.sql");
 
 pub async fn init_database() -> SqlitePool {
     let pool = SqlitePool::connect("sqlite://data.db").await.expect(
         "[ERROR] Could not connect to database. Ensure that data.db exists at the project root!",
     );
+    let _res = sqlx::query(DROP)
+        .execute(&pool)
+        .await
+        .expect("[ERROR] Failed to drop tables.");
     let _res = sqlx::query(SCHEMA)
         .execute(&pool)
         .await
@@ -20,11 +25,12 @@ pub async fn init_database() -> SqlitePool {
 pub async fn _insert_page(pool: &SqlitePool, id: String, page: ParsedPage) -> Result<()> {
     sqlx::query(
         r#"
-        INSERT INTO pages (id, content, parent_id) 
+        INSERT INTO pages (id, content, parent_id, metadata) 
         VALUES (
             ?, 
             ?, 
-            (SELECT id FROM pages WHERE id = ?)
+            (SELECT id FROM pages WHERE id = ?),
+            ?
         )
         ON CONFLICT(id) DO UPDATE SET
             content = excluded.content,
@@ -34,6 +40,7 @@ pub async fn _insert_page(pool: &SqlitePool, id: String, page: ParsedPage) -> Re
     .bind(&id)
     .bind(page.html.to_string())
     .bind(page.parent().unwrap_or_default())
+    .bind(page.get_frontmatter_as_json())
     .execute(pool)
     .await?;
 
@@ -64,11 +71,12 @@ async fn insert_page_with_tx(
 ) -> Result<()> {
     sqlx::query(
         r#"
-        INSERT INTO pages (id, content, parent_id) 
+        INSERT INTO pages (id, content, parent_id, metadata) 
         VALUES (
             ?, 
             ?, 
-            (SELECT id FROM pages WHERE id = ?)
+            (SELECT id FROM pages WHERE id = ?),
+            ?
         )
         ON CONFLICT(id) DO UPDATE SET
             content = excluded.content,
@@ -78,6 +86,7 @@ async fn insert_page_with_tx(
     .bind(&id)
     .bind(page.html.to_string())
     .bind(page.parent().unwrap_or_default())
+    .bind(page.get_frontmatter_as_json())
     .execute(&mut **tx)
     .await?;
 
@@ -124,7 +133,8 @@ pub async fn get_page(pool: &SqlitePool, id: &str) -> Result<Page> {
             WHERE source_id = p.id) AS fwd_json,
             (SELECT json_group_array(source_id) 
             FROM links 
-            WHERE target_id = p.id) AS bwd_json
+            WHERE target_id = p.id) AS bwd_json,
+            p.metadata
         FROM pages p
         WHERE p.id = ?;
     "#;
@@ -133,12 +143,14 @@ pub async fn get_page(pool: &SqlitePool, id: &str) -> Result<Page> {
 
     let fwd_raw: String = row.try_get("fwd_json")?;
     let bwd_raw: String = row.try_get("bwd_json")?;
+    let metadata: String = row.try_get("metadata")?;
 
     Ok(Page {
         content:  row.try_get("content")?,
         parent:   row.try_get("parent_id")?,
         outgoing: serde_json::from_str(&fwd_raw).unwrap_or_default(),
         incoming: serde_json::from_str(&bwd_raw).unwrap_or_default(),
+        metadata: serde_json::from_str(&metadata).unwrap_or_default(),
     })
 }
 
